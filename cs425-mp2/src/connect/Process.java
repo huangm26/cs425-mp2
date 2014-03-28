@@ -32,21 +32,24 @@ public class Process{
 		myPort = 6001;
 		mychannel = DatagramChannel.open();
 		mychannel.socket().bind(new InetSocketAddress(InetAddress.getByName("localhost"),myPort));
-
-//		portNum = 6000 + ID;
+		
+		Process_send send_thread = new Process_send();
+		new Thread(send_thread).start();
+		
 		String mystr = null;
 		while(true)
 		{
 //		unicast_send(1,"aaaa");
 //		mystr = unicast_receive(1,mystr);
-		System.out.println("receiving message " + mystr);
+//		System.out.println("receiving message " + mystr);
+			r_multicast_recv();
 		}
 		
 	}
 	
 	
 	
-	public void r_multicast_recv() throws IOException
+	public static void r_multicast_recv() throws IOException
 	{
 		ArrayList received = new ArrayList();
 		String recv_msg = null;
@@ -69,7 +72,7 @@ public class Process{
 		}
 	}
 	
-	public void b_multicast(String message) throws IOException
+	public static void b_multicast(String message) throws IOException
 	{
 		//b-multicast to group
 		for(int i = 0; i < num_proc; i ++)
@@ -78,7 +81,7 @@ public class Process{
 		}
 	}
 	
-	public String unicast_receive(int sourceID, String message) throws IOException
+	public static String unicast_receive(int sourceID, String message) throws IOException
 	{
 		
 		int sourcePort = 6000 + sourceID;
@@ -106,7 +109,7 @@ public class Process{
 
 	}
 	
-	public void unicast_send(int destID, String message) throws IOException
+	public static void unicast_send(int destID, String message) throws IOException
 	{
 		DatagramChannel channel;
 		channel = DatagramChannel.open();
