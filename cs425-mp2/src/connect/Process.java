@@ -27,9 +27,10 @@ public class Process{
 	public static ArrayList send_msg;
 	public static void main( String args[]) throws IOException
 	{
+		num_proc = 1;
 		send_msg = new ArrayList();
 		myPort = ID + 6000;				//define every process's port by the ID
-		myPort = 6001;
+		myPort = 6000;
 		mychannel = DatagramChannel.open();
 		mychannel.socket().bind(new InetSocketAddress(InetAddress.getByName("localhost"),myPort));
 		

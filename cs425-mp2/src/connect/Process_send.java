@@ -67,6 +67,7 @@ public class Process_send implements Runnable{
 		// TODO Auto-generated method stub
 
 		String message = null;
+		message = "test send !!! ";
 		while(true)
 		{
 			/////
