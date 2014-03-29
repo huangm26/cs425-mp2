@@ -1,6 +1,8 @@
 package connect;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
@@ -9,9 +11,10 @@ import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
+import java.util.Random;
 
+import message.RegularMessage;
 import connect.Process;
 
 public class Process_send implements Runnable{
@@ -21,40 +24,49 @@ public class Process_send implements Runnable{
 	}
 	
 	
-	public void r_multicast_send(String message) throws IOException
+	public void r_multicast_send(RegularMessage message) throws IOException
 	{
 		
 		//this is the message i want to send
 		synchronized(this)
 		{
 
-			Process.send_msg.add(message);
+			Process.send_msg.add(message.content);
 			b_multicast(message);
 		}
 		
 	}
 	
-	public void b_multicast(String message) throws IOException
+	public void b_multicast(RegularMessage message) throws IOException
 	{
 		//b-multicast to group
 		for(int i = 0; i < Process.num_proc; i ++)
 		{
+			message.to = i;
 			unicast_send(i,message);
 		}
 	}
 
 	
-	public void unicast_send(int destID, String message) throws IOException
+	public void unicast_send(int destID, RegularMessage message) throws IOException
 	{
+		Random rand = new Random();
+		int rand_num = rand.nextInt(3);
+//		if(rand_num == 0)
+//		{
 		DatagramChannel channel;
 		channel = DatagramChannel.open();
 		int destPort = 6000 + destID;
 		try {
             InetSocketAddress destAddress = new InetSocketAddress(InetAddress.getByName("localhost"),destPort);
-            ByteBuffer buffer =ByteBuffer.wrap(message.getBytes("UTF-8"));
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            ObjectOutputStream os = new ObjectOutputStream(outputStream);
+            os.writeObject(message);
+            byte[] data = outputStream.toByteArray();
+            ByteBuffer buffer =ByteBuffer.wrap(data);
             channel.connect(new InetSocketAddress("localhost",destPort));
             int bytesend = channel.write(buffer);
-            channel.disconnect();
+            channel.disconnect();    
             System.out.println("send "+ bytesend + " bytes");
             channel.close();
             Thread.sleep(2000);
@@ -66,39 +78,41 @@ public class Process_send implements Runnable{
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-		
-	}
+		}
+//	}
 	
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
-
-		String message = null;
+		String content = null;
+//		message = "From "+ Process.ID + " mID";
 		if(Process.ID == 0)
 		{
-			message = "1111111";
+			content = "1111111";
 		}
 		else if(Process.ID == 1)
 		{
-			message = "222222";
+			content = "222222";
 		}	else if (Process.ID == 2)
 		{
-			message = "333333";
+			content = "333333";
 		}	else if(Process.ID == 3)
 		{
-			message = "444444";
+			content = "444444";
 		}	else if(Process.ID == 4)
 		{
-			message = "555555";
+			content = "555555";
 		}	else
 		{
-			message = "666666";
+			content = "666666";
 		}
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		//get current date time with Date()
 		Date date = new Date();
-		message = message + " " + dateFormat.format(date);
-//		System.out.println(dateFormat.format(date));
+		content = content + " " + dateFormat.format(date);
+		RegularMessage message = new RegularMessage(Process.ID, 0, Process.messageID, content);
+		Process.messageID ++;
+		
 //		while(true)
 //		{
 			/////
@@ -107,17 +121,17 @@ public class Process_send implements Runnable{
 			
 
 		try {
-			Thread.sleep(10000);
+			Thread.sleep(30000);
 		} catch (InterruptedException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-			try {
-				r_multicast_send(message);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+		try {
+			r_multicast_send(message);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 			
 //		}
 		
