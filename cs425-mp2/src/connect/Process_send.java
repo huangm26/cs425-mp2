@@ -7,6 +7,10 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 import connect.Process;
 
@@ -67,9 +71,21 @@ public class Process_send implements Runnable{
 		// TODO Auto-generated method stub
 
 		String message = null;
-		message = "test send !!! ";
-		while(true)
+		if(Process.ID == 0)
 		{
+			message = "1111111";
+		}
+		else 
+		{
+			message = "222222";
+		}
+		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+		//get current date time with Date()
+		Date date = new Date();
+		message = message + " " + dateFormat.format(date);
+//		System.out.println(dateFormat.format(date));
+//		while(true)
+//		{
 			/////
 			//// input a message from stdio
 			
@@ -82,7 +98,7 @@ public class Process_send implements Runnable{
 				e.printStackTrace();
 			}
 			
-		}
+//		}
 		
 	}
 	

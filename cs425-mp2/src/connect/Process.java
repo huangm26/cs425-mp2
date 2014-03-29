@@ -14,6 +14,7 @@ import java.nio.channels.DatagramChannel;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.Scanner;
 
 import javax.swing.Spring;
 
@@ -24,25 +25,30 @@ public class Process{
 	public static int myPort;
 	public static DatagramChannel mychannel;
 	public static int num_proc;	//number of processes
-	public static ArrayList send_msg;
-	public static void main( String args[]) throws IOException
+	public static ArrayList<String> send_msg;
+	public static ArrayList<String> received;	public static void main( String args[]) throws IOException, InterruptedException
 	{
-		num_proc = 1;
-		send_msg = new ArrayList();
-		myPort = ID + 6000;				//define every process's port by the ID
-		myPort = 6000;
-		mychannel = DatagramChannel.open();
-		mychannel.socket().bind(new InetSocketAddress(InetAddress.getByName("localhost"),myPort));
+		System.out.println("Enter the ID starting from 0 : ");
+		Scanner scanner = new Scanner(System.in);
+		ID = scanner.nextInt();
 		
+		Thread.sleep(5000);
+		
+		num_proc = 2;
+		send_msg = new ArrayList<String>();
+		received = new ArrayList<String>();
+		
+		myPort = ID + 6000;				//define every process's port by the ID
+//		myPort = 6000;
+		mychannel = DatagramChannel.open();
+		System.out.println(myPort);
+		mychannel.socket().bind(new InetSocketAddress(InetAddress.getByName("localhost"),myPort));
 		Process_send send_thread = new Process_send();
 		new Thread(send_thread).start();
 		
 		String mystr = null;
 		while(true)
 		{
-//		unicast_send(1,"aaaa");
-//		mystr = unicast_receive(1,mystr);
-//		System.out.println("receiving message " + mystr);
 			r_multicast_recv();
 		}
 		
@@ -52,7 +58,6 @@ public class Process{
 	
 	public static void r_multicast_recv() throws IOException
 	{
-		ArrayList received = new ArrayList();
 		String recv_msg = null;
 
 		for(int i = 0; i < num_proc; i++)
