@@ -27,8 +27,9 @@ public class Process_send implements Runnable{
 		//this is the message i want to send
 		synchronized(this)
 		{
-			b_multicast(message);
+
 			Process.send_msg.add(message);
+			b_multicast(message);
 		}
 		
 	}
@@ -51,7 +52,9 @@ public class Process_send implements Runnable{
 		try {
             InetSocketAddress destAddress = new InetSocketAddress(InetAddress.getByName("localhost"),destPort);
             ByteBuffer buffer =ByteBuffer.wrap(message.getBytes("UTF-8"));
-            int bytesend = channel.send(buffer, destAddress);
+            channel.connect(new InetSocketAddress("localhost",destPort));
+            int bytesend = channel.write(buffer);
+            channel.disconnect();
             System.out.println("send "+ bytesend + " bytes");
             channel.close();
             Thread.sleep(2000);
@@ -75,9 +78,21 @@ public class Process_send implements Runnable{
 		{
 			message = "1111111";
 		}
-		else 
+		else if(Process.ID == 1)
 		{
 			message = "222222";
+		}	else if (Process.ID == 2)
+		{
+			message = "333333";
+		}	else if(Process.ID == 3)
+		{
+			message = "444444";
+		}	else if(Process.ID == 4)
+		{
+			message = "555555";
+		}	else
+		{
+			message = "666666";
 		}
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		//get current date time with Date()
@@ -90,7 +105,13 @@ public class Process_send implements Runnable{
 			//// input a message from stdio
 			
 			
-			
+
+		try {
+			Thread.sleep(10000);
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 			try {
 				r_multicast_send(message);
 			} catch (IOException e) {

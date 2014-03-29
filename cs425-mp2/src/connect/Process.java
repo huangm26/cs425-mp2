@@ -32,9 +32,8 @@ public class Process{
 		Scanner scanner = new Scanner(System.in);
 		ID = scanner.nextInt();
 		
-		Thread.sleep(5000);
 		
-		num_proc = 2;
+		num_proc = 6;
 		send_msg = new ArrayList<String>();
 		received = new ArrayList<String>();
 		
@@ -42,7 +41,11 @@ public class Process{
 //		myPort = 6000;
 		mychannel = DatagramChannel.open();
 		System.out.println(myPort);
-		mychannel.socket().bind(new InetSocketAddress(InetAddress.getByName("localhost"),myPort));
+		
+//		mychannel.socket().bind(new InetSocketAddress(InetAddress.getByName("localhost"),myPort));
+		mychannel.socket().bind(new InetSocketAddress("localhost",myPort));
+		//set the channel to non-blocking
+		mychannel.configureBlocking(false);
 		Process_send send_thread = new Process_send();
 		new Thread(send_thread).start();
 		
@@ -63,7 +66,7 @@ public class Process{
 		for(int i = 0; i < num_proc; i++)
 		{
 			recv_msg = unicast_receive(i, recv_msg);
-			if(!received.contains(recv_msg))
+			if(!received.contains(recv_msg) && (recv_msg != null))
 			{
 				received.add(recv_msg);
 				//check if the message received is originated by this process
@@ -71,8 +74,8 @@ public class Process{
 				{
 					b_multicast(recv_msg);
 				}
-				
-				System.out.println("Delivers " + recv_msg);
+				if(recv_msg != null)
+					System.out.println("Delivers " + recv_msg);
 			}
 
 		}
@@ -83,6 +86,7 @@ public class Process{
 		//b-multicast to group
 		for(int i = 0; i < num_proc; i ++)
 		{
+			System.out.println("Send to "+ i);
 			unicast_send(i,message);
 		}
 	}
@@ -93,14 +97,14 @@ public class Process{
 		int sourcePort = 6000 + sourceID;
 
 		ByteBuffer buffer =ByteBuffer.allocate(100);
+//		mychannel.socket().connect(new InetSocketAddress("localhost",6000));
+
+
 		while(mychannel.receive(buffer)==null){ 
-			//set the channel to non-blocking
-			mychannel.configureBlocking(false);
 		
 			//listen to the connections from certain address
-			mychannel.connect(new InetSocketAddress(InetAddress.getByName("localhost"),sourcePort));
 			
-			mychannel.receive(buffer);
+//			mychannel.receive(buffer);
 			try {
 				Thread.sleep(2000);
 			} catch (InterruptedException e) {
@@ -122,8 +126,11 @@ public class Process{
 		int destPort = 6000 + destID;
 		try {
             InetSocketAddress destAddress = new InetSocketAddress(InetAddress.getByName("localhost"),destPort);
+            
             ByteBuffer buffer =ByteBuffer.wrap(message.getBytes("UTF-8"));
-            int bytesend = channel.send(buffer, destAddress);
+            channel.connect(new InetSocketAddress("localhost",destPort));
+            int bytesend = channel.write(buffer);
+            channel.disconnect();
             System.out.println("send "+ bytesend + " bytes");
             channel.close();
             Thread.sleep(2000);
