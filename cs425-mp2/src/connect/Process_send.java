@@ -106,23 +106,23 @@ public class Process_send implements Runnable{
 //		message = "From "+ Process.ID + " mID";
 		if(Process.ID == 0)
 		{
-			Process.delayTime = 500;
+			Process.delayTime = 1500;
 		}
 		else if(Process.ID == 1)
 		{
-			Process.delayTime = 600;
+			Process.delayTime = 2600;
 		}	else if (Process.ID == 2)
 		{
-			Process.delayTime = 400;
+			Process.delayTime = 1400;
 		}	else if(Process.ID == 3)
 		{
 			Process.delayTime = 700;
 		}	else if(Process.ID == 4)
 		{
-			Process.delayTime = 300;
+			Process.delayTime = 1300;
 		}	else
 		{
-			Process.delayTime = 100;
+			Process.delayTime = 2100;
 		}
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		//get current date time with Date()
@@ -130,7 +130,11 @@ public class Process_send implements Runnable{
 		content = content + " " + dateFormat.format(date);
 		RegularMessage message = new RegularMessage(Process.ID, 0, Process.messageID, content);
 		Process.messageID ++;
-
+		//for causal ordering
+		for(int i = 0; i < Process.num_proc; i++)
+		{
+			message.recent[i] = Process.recent[i];
+		}
 
 		try {
 			Thread.sleep(3000);

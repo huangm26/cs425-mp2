@@ -1,13 +1,13 @@
 package message;
 
 import java.io.Serializable;
+import connect.Process;
 
 public abstract class Message implements Serializable {
 	
 	public int from;
 	public int to;
 	public int messageID;
-	
 	public Message(int from, int to, int messageID) {
 		this.to = to;
 		this.from = from;

@@ -15,6 +15,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -33,19 +35,23 @@ public class Process{
 	public static int num_proc;	//number of processes
 	public static ArrayList<String> send_msg;
 	public static ArrayList<String> received;	
-	public static boolean[][] ack;
+//	public static boolean[][] ack;
 	public static int delayTime;
+	public static int[] recent;
+	public static Queue<RegularMessage> my_queue;
 	public static void main( String args[]) throws IOException, InterruptedException
 	{
 		messageID = 0;
 		System.out.println("Enter the ID starting from 0 : ");
 		Scanner scanner = new Scanner(System.in);
 		ID = scanner.nextInt();
-		ack = new boolean[num_proc][1000];
+//		ack = new boolean[num_proc][1000];
 		
 		num_proc = 6;
 		send_msg = new ArrayList<String>();
 		received = new ArrayList<String>();
+		recent = new int[num_proc];
+		my_queue = new LinkedList<RegularMessage>();
 		
 		myPort = ID + 6000;				//define every process's port by the ID
 		mychannel = DatagramChannel.open();
@@ -66,6 +72,15 @@ public class Process{
 		
 	}
 	
+	public static boolean compare(int[] array1, int[] array2)
+	{
+		boolean flag = true;
+		for(int i = 0; i < num_proc; i ++)
+		{
+			flag = flag && (array1[i] >= array2[i]);
+		}
+		return flag;
+	}
 	
 	
 	public static void r_multicast_recv() throws IOException
@@ -87,7 +102,19 @@ public class Process{
 					}
 					if(recv_msg != null)
 					{
-						System.out.println("Delivers " + ((RegularMessage)recv_msg).content);
+						//if in received message in causal ordering
+						if(compare(recent,((RegularMessage)recv_msg).recent))
+						{
+							recent[recv_msg.from] = recv_msg.messageID;
+							System.out.println("Delivers " + ((RegularMessage)recv_msg).content);
+						}
+						else 
+							my_queue.add((RegularMessage)recv_msg);
+					}
+					while((my_queue.peek()!= null) && compare(recent, my_queue.peek().recent))
+					{
+							recent[my_queue.peek().from] = my_queue.peek().messageID;
+							System.out.println("Delivers " + my_queue.poll().content);
 					}
 				}
 
