@@ -10,7 +10,7 @@ public class RegularMessage extends Message{
 		super(from, to, messageID);
 		// TODO Auto-generated constructor stub
 		this.content = content;
-		recent = new int[Process.num_proc];
+		recent = new int[Process.numProc];
 	}
 
 }

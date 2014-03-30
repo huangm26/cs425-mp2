@@ -41,7 +41,7 @@ public class Process_send implements Runnable{
 	public void b_multicast(RegularMessage message) throws IOException
 	{
 		//b-multicast to group
-		for(int i = 0; i < Process.num_proc; i ++)
+		for(int i = 0; i < Process.numProc; i ++)
 		{
 			//retransmission 10 times
 			for(int j =0; j < 10; j++)
@@ -70,13 +70,13 @@ public class Process_send implements Runnable{
 		channel = DatagramChannel.open();
 		int destPort = 6000 + destID;
 		try {
-            InetSocketAddress destAddress = new InetSocketAddress(InetAddress.getByName("localhost"),destPort);
+            InetSocketAddress destAddress = new InetSocketAddress(InetAddress.getByName(Process.IP),destPort);
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             ObjectOutputStream os = new ObjectOutputStream(outputStream);
             os.writeObject(message);
             byte[] data = outputStream.toByteArray();
             ByteBuffer buffer =ByteBuffer.wrap(data);
-            channel.connect(new InetSocketAddress("localhost",destPort));
+            channel.connect(new InetSocketAddress(Process.IP,destPort));
             //randomized dalay
             Thread.sleep(ano_num);
             int bytesend = channel.write(buffer);
@@ -104,26 +104,6 @@ public class Process_send implements Runnable{
 		Scanner scanner = new Scanner(System.in);
 		content = scanner.nextLine();
 //		message = "From "+ Process.ID + " mID";
-		if(Process.ID == 0)
-		{
-			Process.delayTime = 1500;
-		}
-		else if(Process.ID == 1)
-		{
-			Process.delayTime = 2600;
-		}	else if (Process.ID == 2)
-		{
-			Process.delayTime = 1400;
-		}	else if(Process.ID == 3)
-		{
-			Process.delayTime = 700;
-		}	else if(Process.ID == 4)
-		{
-			Process.delayTime = 1300;
-		}	else
-		{
-			Process.delayTime = 2100;
-		}
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		//get current date time with Date()
 		Date date = new Date();
@@ -131,7 +111,7 @@ public class Process_send implements Runnable{
 		RegularMessage message = new RegularMessage(Process.ID, 0, Process.messageID, content);
 		Process.messageID ++;
 		//for causal ordering
-		for(int i = 0; i < Process.num_proc; i++)
+		for(int i = 0; i < Process.numProc; i++)
 		{
 			message.recent[i] = Process.recent[i];
 		}

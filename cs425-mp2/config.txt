@@ -1,0 +1,32 @@
+## This is the configuration file
+## Change the following options to achieve different test cases
+
+## Ordering type should be either causal or total
+## Number of processes should be an integer between 1 and 6, inclusively
+## Leave IP blank if not applicable
+## Delay in ms, should be an integer
+## Drop rate between 0 and 100, should be an integer
+
+# OrderingType causal
+# NumberProc 6
+
+# IP_P0 127.0.0.1
+# IP_P1 127.0.0.1
+# IP_P2 127.0.0.1
+# IP_P3 127.0.0.1
+# IP_P4 127.0.0.1
+# IP_P5 127.0.0.1
+
+# Delay_P0 1500
+# Delay_P1 2600
+# Delay_P2 1400
+# Delay_P3 700
+# Delay_P4 1300
+# Delay_P5 2100
+
+# DropRate_P0 0
+# DropRate_P1 10
+# DropRate_P2 20
+# DropRate_P3 30
+# DropRate_P4 40
+# DropRate_P5 50
