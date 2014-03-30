@@ -18,7 +18,7 @@
 # IP_P5 127.0.0.1
 
 # Delay_P0 1500
-# Delay_P1 2600
+# Delay_P1 1600
 # Delay_P2 1400
 # Delay_P3 700
 # Delay_P4 1300

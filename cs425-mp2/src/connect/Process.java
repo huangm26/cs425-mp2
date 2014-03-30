@@ -172,10 +172,11 @@ public class Process {
 	public static void unicast_send(int destID, RegularMessage message)
 			throws IOException {
 		Random rand = new Random();
-		int rand_num = rand.nextInt(3);
-		Random ano_rand = new Random();
-		int ano_num = rand.nextInt(2 * delayTime + 1);
-		if (rand_num == 0) {
+		// Delay in range [0, 2*mean delay]
+		int randomDelay = rand.nextInt(2 * delayTime + 1);
+		// Generate random number from 1 to 100
+		// e.g. If drop rate = 10%, then a random number larger than 10 means successfully send
+		if (rand.nextInt(100) + 1 > dropRate) {
 			DatagramChannel channel;
 			channel = DatagramChannel.open();
 			int destPort = 6000 + destID;
@@ -189,7 +190,7 @@ public class Process {
 				ByteBuffer buffer = ByteBuffer.wrap(data);
 				channel.connect(new InetSocketAddress(IP, destPort));
 				// randomized dalay
-				Thread.sleep(ano_num);
+				Thread.sleep(randomDelay);
 				int bytesend = channel.write(buffer);
 				channel.disconnect();
 				// System.out.println("send "+ bytesend + " bytes");
