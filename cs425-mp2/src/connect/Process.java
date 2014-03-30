@@ -34,6 +34,7 @@ public class Process{
 	public static ArrayList<String> send_msg;
 	public static ArrayList<String> received;	
 	public static boolean[][] ack;
+	public static int delayTime;
 	public static void main( String args[]) throws IOException, InterruptedException
 	{
 		messageID = 0;
@@ -47,7 +48,6 @@ public class Process{
 		received = new ArrayList<String>();
 		
 		myPort = ID + 6000;				//define every process's port by the ID
-//		myPort = 6000;
 		mychannel = DatagramChannel.open();
 		System.out.println(myPort);
 		
@@ -100,9 +100,12 @@ public class Process{
 		//b-multicast to group
 		for(int i = 0; i < num_proc; i ++)
 		{
-			System.out.println("Send to "+ i);
-			message.to = i;
-			unicast_send(i,message);
+			for(int j = 0; j < 10; j++)
+			{
+//				System.out.println("Send to "+ i);
+				message.to = i;
+				unicast_send(i,message);
+			}
 		}
 	}
 	
@@ -112,12 +115,7 @@ public class Process{
 		int sourcePort = 6000 + sourceID;
 
 		ByteBuffer buffer =ByteBuffer.allocate(1000);
-//		mychannel.socket().connect(new InetSocketAddress("localhost",6000));
-
-
 		while(mychannel.receive(buffer)==null){ 
-		
-			//listen to the connections from certain address
 			
 //			mychannel.receive(buffer);
 			try {
@@ -135,11 +133,7 @@ public class Process{
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
-//		message = Charset.forName("UTF-8").newDecoder().decode(buffer).toString();
-//			System.out.println("receiving message " +Charset.forName("UTF-8").newDecoder().decode(buffer).toString());
-//		mychannel.disconnect();
 		
-		//send ack
 		return message;
 
 	}
@@ -148,8 +142,10 @@ public class Process{
 	{
 		Random rand = new Random();
 		int rand_num = rand.nextInt(3);
-//		if(rand_num == 0)
-//		{
+		Random ano_rand = new Random();
+		int ano_num = rand.nextInt(2*delayTime+1);
+		if(rand_num == 0)
+		{
 		DatagramChannel channel;
 		channel = DatagramChannel.open();
 		int destPort = 6000 + destID;
@@ -161,11 +157,13 @@ public class Process{
             byte[] data = outputStream.toByteArray();
             ByteBuffer buffer =ByteBuffer.wrap(data);
             channel.connect(new InetSocketAddress("localhost",destPort));
+            //randomized dalay
+            Thread.sleep(ano_num);
             int bytesend = channel.write(buffer);
             channel.disconnect();
-            System.out.println("send "+ bytesend + " bytes");
+//            System.out.println("send "+ bytesend + " bytes");
             channel.close();
-            Thread.sleep(2000);
+//            Thread.sleep(2000);
  
         } catch (UnknownHostException e) {
             e.printStackTrace();
@@ -174,6 +172,6 @@ public class Process{
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-//		}
+		}
 	}
 }

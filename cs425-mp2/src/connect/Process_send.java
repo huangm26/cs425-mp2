@@ -43,8 +43,17 @@ public class Process_send implements Runnable{
 		//b-multicast to group
 		for(int i = 0; i < Process.num_proc; i ++)
 		{
-			message.to = i;
-			unicast_send(i,message);
+			//retransmission 10 times
+			for(int j =0; j < 10; j++)
+			{
+				Random rand = new Random();
+				int rand_num = rand.nextInt(3);
+				if(rand_num == 0)
+				{
+					message.to = i;
+					unicast_send(i,message);
+				}
+			}
 		}
 	}
 
@@ -53,8 +62,10 @@ public class Process_send implements Runnable{
 	{
 		Random rand = new Random();
 		int rand_num = rand.nextInt(3);
-//		if(rand_num == 0)
-//		{
+		Random ano_rand = new Random();
+		int ano_num = rand.nextInt(2*Process.delayTime+1);
+		if(rand_num == 0)
+		{
 		DatagramChannel channel;
 		channel = DatagramChannel.open();
 		int destPort = 6000 + destID;
@@ -66,11 +77,13 @@ public class Process_send implements Runnable{
             byte[] data = outputStream.toByteArray();
             ByteBuffer buffer =ByteBuffer.wrap(data);
             channel.connect(new InetSocketAddress("localhost",destPort));
+            //randomized dalay
+            Thread.sleep(ano_num);
             int bytesend = channel.write(buffer);
             channel.disconnect();    
-            //System.out.println("send "+ bytesend + " bytes");
+//            System.out.println("send "+ bytesend + " bytes");
             channel.close();
-            Thread.sleep(2000);
+//            Thread.sleep(2000);
  
         } catch (UnknownHostException e) {
             e.printStackTrace();
@@ -80,7 +93,7 @@ public class Process_send implements Runnable{
             e.printStackTrace();
         }
 		}
-//	}
+	}
 	
 	@Override
 	public void run() {
@@ -91,39 +104,33 @@ public class Process_send implements Runnable{
 		Scanner scanner = new Scanner(System.in);
 		content = scanner.nextLine();
 //		message = "From "+ Process.ID + " mID";
-		/*if(Process.ID == 0)
+		if(Process.ID == 0)
 		{
-			content = "1111111";
+			Process.delayTime = 500;
 		}
 		else if(Process.ID == 1)
 		{
-			content = "222222";
+			Process.delayTime = 600;
 		}	else if (Process.ID == 2)
 		{
-			content = "333333";
+			Process.delayTime = 400;
 		}	else if(Process.ID == 3)
 		{
-			content = "444444";
+			Process.delayTime = 700;
 		}	else if(Process.ID == 4)
 		{
-			content = "555555";
+			Process.delayTime = 300;
 		}	else
 		{
-			content = "666666";
-		}*/
+			Process.delayTime = 100;
+		}
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		//get current date time with Date()
 		Date date = new Date();
 		content = content + " " + dateFormat.format(date);
 		RegularMessage message = new RegularMessage(Process.ID, 0, Process.messageID, content);
 		Process.messageID ++;
-		
-//		while(true)
-//		{
-			/////
-			//// input a message from stdio
-			
-			
+
 
 		try {
 			Thread.sleep(3000);
@@ -138,7 +145,6 @@ public class Process_send implements Runnable{
 			e.printStackTrace();
 		}
 		}
-//		}
 		
 	}
 	
