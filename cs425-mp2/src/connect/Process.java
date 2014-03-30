@@ -33,8 +33,8 @@ public class Process {
 	public static ArrayList<String> send_msg;
 	public static ArrayList<String> received;
 	// public static boolean[][] ack;
-	public static int delayTime;
-	public static int dropRate;
+	public static int delayTime = 0;
+	public static int dropRate = 0;
 	public static int[] recent;
 	public static Queue<RegularMessage> my_queue;
 	public static String orderingType = "";
