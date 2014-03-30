@@ -13,6 +13,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Random;
+import java.util.Scanner;
 
 import message.RegularMessage;
 import connect.Process;
@@ -67,7 +68,7 @@ public class Process_send implements Runnable{
             channel.connect(new InetSocketAddress("localhost",destPort));
             int bytesend = channel.write(buffer);
             channel.disconnect();    
-            System.out.println("send "+ bytesend + " bytes");
+            //System.out.println("send "+ bytesend + " bytes");
             channel.close();
             Thread.sleep(2000);
  
@@ -84,9 +85,13 @@ public class Process_send implements Runnable{
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
+		System.out.println("Let's chat!");
+		while(true) {
 		String content = null;
+		Scanner scanner = new Scanner(System.in);
+		content = scanner.nextLine();
 //		message = "From "+ Process.ID + " mID";
-		if(Process.ID == 0)
+		/*if(Process.ID == 0)
 		{
 			content = "1111111";
 		}
@@ -105,7 +110,7 @@ public class Process_send implements Runnable{
 		}	else
 		{
 			content = "666666";
-		}
+		}*/
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		//get current date time with Date()
 		Date date = new Date();
@@ -132,9 +137,10 @@ public class Process_send implements Runnable{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-			
+		}
 //		}
 		
 	}
 	
 }
+
