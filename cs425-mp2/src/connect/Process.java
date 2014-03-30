@@ -80,7 +80,11 @@ public class Process {
 		new Thread(send_thread).start();
 
 		while (true) {
-			r_multicast_recv();
+			if (orderingType.equals("causal")) {
+				r_multicast_recv_causal();
+			} else {
+				r_multicast_recv_total();
+			}
 		}
 
 	}
@@ -93,7 +97,7 @@ public class Process {
 		return flag;
 	}
 
-	public static void r_multicast_recv() throws IOException {
+	public static void r_multicast_recv_causal() throws IOException {
 		Message recv_msg = null;
 
 		for (int i = 0; i < numProc; i++) {
@@ -108,13 +112,14 @@ public class Process {
 						b_multicast((RegularMessage) recv_msg);
 					}
 					if (recv_msg != null) {
-						// if in received message in causal ordering
+						// if in received message in Causal Ordering
 						if (compare(recent, ((RegularMessage) recv_msg).recent)) {
 							recent[recv_msg.from] = recv_msg.messageID;
 							System.out.println("Delivers "
 									+ ((RegularMessage) recv_msg).content);
 						} else
 							my_queue.add((RegularMessage) recv_msg);
+
 					}
 					while ((my_queue.peek() != null)
 							&& compare(recent, my_queue.peek().recent)) {
@@ -124,6 +129,29 @@ public class Process {
 					}
 				}
 
+			}
+		}
+	}
+
+	private static void r_multicast_recv_total() throws IOException {
+		Message recv_msg = null;
+
+		for (int i = 0; i < numProc; i++) {
+			recv_msg = unicast_receive(i, recv_msg);
+			if (recv_msg.isRegular()) {
+				if (!received.contains(((RegularMessage) recv_msg).content)
+						&& (recv_msg != null)) {
+					received.add(((RegularMessage) recv_msg).content);
+					// check if the message received is originated by this
+					// process
+					if (!send_msg.contains(((RegularMessage) recv_msg).content)) {
+						b_multicast((RegularMessage) recv_msg);
+					}
+					if (recv_msg != null) {
+						System.out.println("Delivers "
+								+ ((RegularMessage) recv_msg).content);
+					}
+				}
 			}
 		}
 	}

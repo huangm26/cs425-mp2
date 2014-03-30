@@ -7,7 +7,7 @@
 ## Delay in ms, should be an integer
 ## Drop rate between 0 and 100, should be an integer
 
-# OrderingType causal
+# OrderingType total
 # NumberProc 6
 
 # IP_P0 127.0.0.1
