@@ -86,7 +86,9 @@ public class Process{
 						b_multicast((RegularMessage)recv_msg);
 					}
 					if(recv_msg != null)
+					{
 						System.out.println("Delivers " + ((RegularMessage)recv_msg).content);
+					}
 				}
 
 			}

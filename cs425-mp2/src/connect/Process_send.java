@@ -126,7 +126,7 @@ public class Process_send implements Runnable{
 			
 
 		try {
-			Thread.sleep(30000);
+			Thread.sleep(3000);
 		} catch (InterruptedException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
