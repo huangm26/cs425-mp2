@@ -79,7 +79,6 @@ public class Process {
 		Process_send send_thread = new Process_send();
 		new Thread(send_thread).start();
 
-		String mystr = null;
 		while (true) {
 			r_multicast_recv();
 		}
@@ -147,8 +146,6 @@ public class Process {
 
 		ByteBuffer buffer = ByteBuffer.allocate(1000);
 		while (mychannel.receive(buffer) == null) {
-
-			// mychannel.receive(buffer);
 			try {
 				Thread.sleep(2000);
 			} catch (InterruptedException e) {
@@ -164,9 +161,7 @@ public class Process {
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
-
 		return message;
-
 	}
 
 	public static void unicast_send(int destID, RegularMessage message)
@@ -175,7 +170,8 @@ public class Process {
 		// Delay in range [0, 2*mean delay]
 		int randomDelay = rand.nextInt(2 * delayTime + 1);
 		// Generate random number from 1 to 100
-		// e.g. If drop rate = 10%, then a random number larger than 10 means successfully send
+		// e.g. If drop rate = 10%, then a random number larger than 10 means
+		// successfully send
 		if (rand.nextInt(100) + 1 > dropRate) {
 			DatagramChannel channel;
 			channel = DatagramChannel.open();

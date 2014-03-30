@@ -26,11 +26,9 @@ public class Process_send implements Runnable {
 
 		// this is the message i want to send
 		synchronized (this) {
-
 			Process.send_msg.add(message.content);
 			b_multicast(message);
 		}
-
 	}
 
 	public void b_multicast(RegularMessage message) throws IOException {
@@ -39,8 +37,7 @@ public class Process_send implements Runnable {
 			// retransmission 10 times
 			for (int j = 0; j < 10; j++) {
 				Random rand = new Random();
-				int rand_num = rand.nextInt(3);
-				if (rand_num == 0) {
+				if (rand.nextInt(100) + 1 > Process.dropRate) {
 					message.to = i;
 					unicast_send(i, message);
 				}
@@ -54,7 +51,8 @@ public class Process_send implements Runnable {
 		// Delay in range [0, 2*mean delay]
 		int randomDelay = rand.nextInt(2 * Process.delayTime + 1);
 		// Generate random number from 1 to 100
-		// e.g. If drop rate = 10%, then a random number larger than 10 means successfully send
+		// e.g. If drop rate = 10%, then a random number larger than 10 means
+		// successfully send
 		if (rand.nextInt(100) + 1 > Process.dropRate) {
 			DatagramChannel channel;
 			channel = DatagramChannel.open();
@@ -75,7 +73,6 @@ public class Process_send implements Runnable {
 				// System.out.println("send "+ bytesend + " bytes");
 				channel.close();
 				// Thread.sleep(2000);
-
 			} catch (UnknownHostException e) {
 				e.printStackTrace();
 			} catch (SocketException e) {
@@ -120,7 +117,6 @@ public class Process_send implements Runnable {
 				e.printStackTrace();
 			}
 		}
-
 	}
 
 }
