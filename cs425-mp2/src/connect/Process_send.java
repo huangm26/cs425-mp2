@@ -26,7 +26,6 @@ public class Process_send implements Runnable {
 	}
 
 	public void r_multicast_send(RegularMessage message) throws IOException {
-
 		// this is the message i want to send
 		synchronized (this) {
 			Process.send_msg.add(message.content);
@@ -37,8 +36,8 @@ public class Process_send implements Runnable {
 	public void b_multicast(RegularMessage message) throws IOException {
 		// b-multicast to group
 		for (int i = 0; i < Process.numProc; i++) {
-					message.to = i;
-					unicast_send(i, message);
+			message.to = i;
+			unicast_send(i, message);
 		}
 	}
 
@@ -79,6 +78,7 @@ public class Process_send implements Runnable {
 				//if haven't received ack from the receiver, continue to send
 				if(!Process.ack[destID][message.messageID])
 				{
+					//System.out.println(String.format("resend msg %d to %d", message.messageID, destID));
 					unicast_send(destID, message);
 				}
 				

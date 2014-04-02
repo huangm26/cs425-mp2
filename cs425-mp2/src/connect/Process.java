@@ -13,6 +13,7 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Random;
@@ -22,6 +23,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import message.Ack;
 import message.Message;
+import message.OrderMessage;
 import message.RegularMessage;
 import util.Configuration;
 
@@ -43,12 +45,19 @@ public class Process {
 	public static Queue<RegularMessage> input_queue;
 	public static String orderingType = "";
 
+	/****************** For total ordering ******************/
+	public static int rg;
+	public static int sg; // For sequencer(P0) only
+	public static Hashtable<Integer, RegularMessage> holdBackQueue;
+
 	public static void main(String args[]) throws IOException,
 			InterruptedException {
 		// User determine id
-		System.out.println("Enter the ID starting from 0 : ");
 		Scanner scanner = new Scanner(System.in);
-		ID = scanner.nextInt();
+		do {
+			System.out.println("Enter the ID starting from 0 (to 5): ");
+			ID = scanner.nextInt();
+		} while (ID < 0 || ID > 5);
 
 		// Get configuration values
 		Configuration.getInstance();
@@ -63,20 +72,32 @@ public class Process {
 						.format("Process ID = %d\nIP = %s\nordering = %s\ndelay = %d ms\ndrop rate = %d\n",
 								ID, IP, orderingType, delayTime, dropRate));
 
+		/****************** For total ordering ******************/
+		// On initialization for group member
+		rg = 0;
+		// Use hashtable as hold-back queue to pair messageID(key) with
+		// message(value)
+		holdBackQueue = new Hashtable<Integer, RegularMessage>();
+		// P0 should always be the sequencer
+		// So B-multicast(g U {sequencer(g)}, <m, i>) is just B-multicast(g, <m,
+		// i>)
+		if (ID == 0) {
+			// On initialization for sequencer
+			sg = 0;
+		}
+
 		messageID = 0;
-		//initialize all the acks to false
+		// initialize all the acks to false
 		ack = new boolean[numProc][1000];
-		for(int i = 0; i < numProc; i++)
-		{
-			for(int j = 0; j < 1000; j++)
-			{
+		for (int i = 0; i < numProc; i++) {
+			for (int j = 0; j < 1000; j++) {
 				ack[i][j] = false;
 			}
 		}
 		send_msg = new ArrayList<String>();
 		received = new ArrayList<String>();
 		recent = new int[numProc];
-		for(int i = 0; i < numProc; i++)
+		for (int i = 0; i < numProc; i++)
 			recent[i] = 0;
 		my_queue = new LinkedList<RegularMessage>();
 		input_queue = new LinkedList<RegularMessage>();
@@ -89,13 +110,16 @@ public class Process {
 		mychannel.socket().bind(new InetSocketAddress(IP, myPort));
 		// set the channel to non-blocking
 		mychannel.configureBlocking(false);
+		// Thread for reading user input
 		ReadInput input_thread = new ReadInput();
 		new Thread(input_thread).start();
+		// Thread for initiate multicast
 		Process_send send_thread = new Process_send();
 		new Thread(send_thread).start();
+
 		if (orderingType.equals("causal"))
 			System.out.println("causal ordering");
-		else 
+		else
 			System.out.println("total ordering");
 		while (true) {
 			if (orderingType.equals("causal")) {
@@ -126,9 +150,10 @@ public class Process {
 					received.add(((RegularMessage) recv_msg).content);
 					// check if the message received is originated by this
 					// process
-//					if (!send_msg.contains(((RegularMessage) recv_msg).content)) {
-//						b_multicast((RegularMessage) recv_msg);
-//					}
+					// if (!send_msg.contains(((RegularMessage)
+					// recv_msg).content)) {
+					// b_multicast((RegularMessage) recv_msg);
+					// }
 					if (recv_msg != null) {
 						// if in received message in Causal Ordering
 						Lock lock = new ReentrantLock();
@@ -150,10 +175,8 @@ public class Process {
 								+ my_queue.poll().content);
 
 						lock.unlock();
-						
 					}
 				}
-
 			}
 		}
 	}
@@ -161,22 +184,48 @@ public class Process {
 	private static void r_multicast_recv_total() throws IOException {
 		Message recv_msg = null;
 
-		for (int i = 0; i < numProc; i++) {
-			recv_msg = unicast_receive(i, recv_msg);
+		for (int j = 0; j < numProc; j++) {
+			recv_msg = unicast_receive(j, recv_msg);
 			if (recv_msg.isRegular()) {
 				if (!received.contains(((RegularMessage) recv_msg).content)
 						&& (recv_msg != null)) {
 					received.add(((RegularMessage) recv_msg).content);
-					// check if the message received is originated by this
-					// process
-//					if (!send_msg.contains(((RegularMessage) recv_msg).content)) {
-//						b_multicast((RegularMessage) recv_msg);
-//					}
-					if (recv_msg != null) {
-						System.out.println("Delivers "
-								+ ((RegularMessage) recv_msg).content);
+					// On B-deliver(<m, i>) with g = group(m)
+					// Place <m, i> in hold-back queue;
+					holdBackQueue.put(((RegularMessage) recv_msg).messageID,
+							(RegularMessage) recv_msg);
+				}
+				// For sequencer e.g. process 0
+				// On B-deliver(<m, i>)
+				if (ID == 0) {
+					// System.out.println("Sequencer working...");
+					OrderMessageSend sendOrderThread = new OrderMessageSend(
+							messageID, recv_msg.messageID, sg);
+					new Thread(sendOrderThread).start();
+					sg++;
+				}
+			}
+			if (recv_msg.isOrderMessage()) {
+				// On B-deliver( m order = <“order”, i, S>) with g = group(m)
+				int i = ((OrderMessage) recv_msg).i;
+				int S = ((OrderMessage) recv_msg).S;
+				// wait until <m, i> in hold-back queue and S = rg
+				while (true) {
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					// System.out.println("size=" + holdBackQueue.size());
+					if (holdBackQueue.containsKey(i) && S == rg) {
+						break;
 					}
 				}
+				// Delete m from hold-back queue, deliver m, rg = S + 1
+				String readyToDeliver = holdBackQueue.get(i).content;
+				holdBackQueue.remove(i);
+				System.out.println("Delivers " + readyToDeliver);
+				rg = S + 1;
 			}
 		}
 	}
@@ -203,23 +252,30 @@ public class Process {
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
-		//if the message is regular message, send ack back to sender
-		if(message.isRegular())
-		{
+		// if the message is regular message, send ack back to sender
+		if (message.isRegular()) {
 			Ack my_ack = new Ack(message.to, message.from, message.messageID);
+			// System.out.println(String.format("sending ack to %d, for REGULAR msg %d",
+			// my_ack.to, message.messageID));
 			unicast_send_ack(message.from, my_ack);
-		}	
-		//if the message is an ack, mark the ack array of the corresponding message as true
-		else if(message.isAck())
-		{
+		} else if (message.isOrderMessage()) {
+			Ack my_ack = new Ack(message.to, message.from, message.messageID);
+			// System.out.println(String.format("sending ack to %d, for ORDER msg %d",
+			// my_ack.to, message.messageID));
+			unicast_send_ack(message.from, my_ack);
+		}
+		// if the message is an ack, mark the ack array of the corresponding
+		// message as true
+		else if (message.isAck()) {
+			// System.out.println(String.format("receiving ack for %d from %d",message.messageID,
+			// message.from));
 			ack[message.from][message.messageID] = true;
 		}
-			
+
 		return message;
 	}
 
-	
-	//unicast funtion for send ack 
+	// unicast function for send ack
 	public static void unicast_send_ack(int destID, Ack message)
 			throws IOException {
 		Random rand = new Random();
@@ -258,5 +314,5 @@ public class Process {
 			}
 		}
 	}
-	
+
 }

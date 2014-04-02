@@ -21,4 +21,8 @@ public abstract class Message implements Serializable {
 	public boolean isRegular() {
 		return this instanceof RegularMessage;
 	}
+	
+	public boolean isOrderMessage() {
+		return this instanceof OrderMessage;
+	}
 }

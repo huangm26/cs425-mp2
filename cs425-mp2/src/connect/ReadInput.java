@@ -28,7 +28,9 @@ public class ReadInput  implements Runnable{
 			content = content + " " + "MessageID " + Process.messageID;
 			content = content + " " + dateFormat.format(date);
 			RegularMessage message = new RegularMessage(Process.ID, 0, Process.messageID, content);
-			Process.messageID ++;
+			synchronized(this) {
+				Process.messageID ++;
+			}
 			Lock lock = new ReentrantLock();
 			lock.lock();
 			for (int i = 0; i < Process.numProc; i++) {
