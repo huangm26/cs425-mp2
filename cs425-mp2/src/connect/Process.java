@@ -53,6 +53,7 @@ public class Process {
 	public static PriorityQueue<OrderMessage> pq;
 	public static int order;
 	public static int currOrder;
+	public static ArrayList<String> preventQueue;
 
 	private static class OrderComparator implements Comparator<OrderMessage> {
 		@Override
@@ -96,6 +97,7 @@ public class Process {
 			order = 0;
 		}
 		currOrder = 0;
+		preventQueue = new ArrayList<String>();
 
 		messageID = 0;
 		// initialize all the acks to false
@@ -213,7 +215,10 @@ public class Process {
 				}
 			}
 			if (recv_msg.isOrderMessage()) {
-				pq.add((OrderMessage) recv_msg);
+				if (!preventQueue.contains(((OrderMessage)recv_msg).content)) {
+					preventQueue.add(((OrderMessage)recv_msg).content);
+					pq.add((OrderMessage) recv_msg);
+				}	
 			}
 			if (pq.peek() != null) {
 				// Deliver message by order from 0

@@ -8,7 +8,7 @@
 ## Drop rate between 0 and 100, should be an integer
 
 # OrderingType total
-# NumberProc 3
+# NumberProc 6
 
 # IP_P0 127.0.0.1
 # IP_P1 127.0.0.1
