@@ -25,8 +25,8 @@
 # Delay_P5 2100
 
 # DropRate_P0 0
-# DropRate_P1 0
-# DropRate_P2 0
-# DropRate_P3 0
-# DropRate_P4 0
-# DropRate_P5 0
+# DropRate_P1 10
+# DropRate_P2 20
+# DropRate_P3 30
+# DropRate_P4 40
+# DropRate_P5 50

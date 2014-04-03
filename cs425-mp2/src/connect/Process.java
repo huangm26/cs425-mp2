@@ -118,7 +118,7 @@ public class Process {
 		input_queue = new LinkedList<RegularMessage>();
 		myPort = ID + 6000; // define every process's port by the ID
 		mychannel = DatagramChannel.open();
-		System.out.println(myPort);
+		System.out.println("This is port " + myPort);
 
 		// mychannel.socket().bind(new
 		// InetSocketAddress(InetAddress.getByName("localhost"),myPort));
@@ -199,7 +199,6 @@ public class Process {
 
 	private static void r_multicast_recv_total() throws IOException {
 		Message recv_msg = null;
-		Lock lock = new ReentrantLock();
 		
 		for (int j = 0; j < numProc; j++) {
 			recv_msg = unicast_receive(j, recv_msg);
@@ -223,12 +222,10 @@ public class Process {
 			if (pq.peek() != null) {
 				// Deliver message by order from 0
 				OrderMessage readyToDeliver = pq.peek();
-				System.out.println(String.format("msgOrder=%d currOrder=%d", readyToDeliver.order, currOrder));
-				if (!send_msg.contains(readyToDeliver.content)
-						&& readyToDeliver.order == currOrder) {
-					send_msg.add(readyToDeliver.content);
+				//System.out.println(String.format("msgOrder=%d currOrder=%d", readyToDeliver.order, currOrder));
+				if (readyToDeliver.order == currOrder) {
 					System.out.println("Delivers " + readyToDeliver.content);
-					System.out.println("order=" + readyToDeliver.order);
+					//System.out.println("order=" + readyToDeliver.order);
 					pq.poll();
 					currOrder++;
 				}
