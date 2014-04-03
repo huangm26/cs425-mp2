@@ -13,8 +13,9 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.util.ArrayList;
-import java.util.Hashtable;
+import java.util.Comparator;
 import java.util.LinkedList;
+import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Random;
 import java.util.Scanner;
@@ -46,9 +47,23 @@ public class Process {
 	public static String orderingType = "";
 
 	/****************** For total ordering ******************/
-	public static int rg;
-	public static int sg; // For sequencer(P0) only
-	public static Hashtable<Integer, RegularMessage> holdBackQueue;
+	public static Comparator<OrderMessage> comparator;
+	public static PriorityQueue<OrderMessage> pq;
+	public static int order;
+	public static int currOrder;
+
+	private static class OrderComparator implements Comparator<OrderMessage> {
+		@Override
+		public int compare(OrderMessage om1, OrderMessage om2) {
+			if (om1.order < om2.order) {
+				return -1;
+			}
+			if (om1.order > om2.order) {
+				return 1;
+			}
+			return 0;
+		}
+	}
 
 	public static void main(String args[]) throws IOException,
 			InterruptedException {
@@ -73,18 +88,12 @@ public class Process {
 								ID, IP, orderingType, delayTime, dropRate));
 
 		/****************** For total ordering ******************/
-		// On initialization for group member
-		rg = 0;
-		// Use hashtable as hold-back queue to pair messageID(key) with
-		// message(value)
-		holdBackQueue = new Hashtable<Integer, RegularMessage>();
-		// P0 should always be the sequencer
-		// So B-multicast(g U {sequencer(g)}, <m, i>) is just B-multicast(g, <m,
-		// i>)
+		comparator = new OrderComparator();
+		pq = new PriorityQueue<OrderMessage>(30, comparator);
 		if (ID == 0) {
-			// On initialization for sequencer
-			sg = 0;
+			order = 0;
 		}
+		currOrder = 0;
 
 		messageID = 0;
 		// initialize all the acks to false
@@ -113,14 +122,15 @@ public class Process {
 		// Thread for reading user input
 		ReadInput input_thread = new ReadInput();
 		new Thread(input_thread).start();
-		// Thread for initiate multicast
-		Process_send send_thread = new Process_send();
-		new Thread(send_thread).start();
 
-		if (orderingType.equals("causal"))
-			System.out.println("causal ordering");
-		else
-			System.out.println("total ordering");
+		if (orderingType.equals("causal")) {
+			// Thread for initiate multicast
+			Process_send send_thread = new Process_send();
+			new Thread(send_thread).start();
+		} else {
+			Process_send_total send_total_thread = new Process_send_total();
+			new Thread(send_total_thread).start();
+		}
 		while (true) {
 			if (orderingType.equals("causal")) {
 				r_multicast_recv_causal();
@@ -183,49 +193,36 @@ public class Process {
 
 	private static void r_multicast_recv_total() throws IOException {
 		Message recv_msg = null;
-
+		Lock lock = new ReentrantLock();
+		
 		for (int j = 0; j < numProc; j++) {
 			recv_msg = unicast_receive(j, recv_msg);
+			// Only sequencer P0 will receive regular message
 			if (recv_msg.isRegular()) {
 				if (!received.contains(((RegularMessage) recv_msg).content)
 						&& (recv_msg != null)) {
 					received.add(((RegularMessage) recv_msg).content);
-					// On B-deliver(<m, i>) with g = group(m)
-					// Place <m, i> in hold-back queue;
-					holdBackQueue.put(((RegularMessage) recv_msg).messageID,
-							(RegularMessage) recv_msg);
-				}
-				// For sequencer e.g. process 0
-				// On B-deliver(<m, i>)
-				if (ID == 0) {
-					// System.out.println("Sequencer working...");
+					// System.out.println("This line should appear the same number as total number of input messsage");
 					OrderMessageSend sendOrderThread = new OrderMessageSend(
-							messageID, recv_msg.messageID, sg);
+							((RegularMessage) recv_msg).content);
 					new Thread(sendOrderThread).start();
-					sg++;
 				}
 			}
 			if (recv_msg.isOrderMessage()) {
-				// On B-deliver( m order = <“order”, i, S>) with g = group(m)
-				int i = ((OrderMessage) recv_msg).i;
-				int S = ((OrderMessage) recv_msg).S;
-				// wait until <m, i> in hold-back queue and S = rg
-				while (true) {
-					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-					// System.out.println("size=" + holdBackQueue.size());
-					if (holdBackQueue.containsKey(i) && S == rg) {
-						break;
-					}
+				pq.add((OrderMessage) recv_msg);
+			}
+			if (pq.peek() != null) {
+				// Deliver message by order from 0
+				OrderMessage readyToDeliver = pq.peek();
+				System.out.println(String.format("msgOrder=%d currOrder=%d", readyToDeliver.order, currOrder));
+				if (!send_msg.contains(readyToDeliver.content)
+						&& readyToDeliver.order == currOrder) {
+					send_msg.add(readyToDeliver.content);
+					System.out.println("Delivers " + readyToDeliver.content);
+					System.out.println("order=" + readyToDeliver.order);
+					pq.poll();
+					currOrder++;
 				}
-				// Delete m from hold-back queue, deliver m, rg = S + 1
-				String readyToDeliver = holdBackQueue.get(i).content;
-				holdBackQueue.remove(i);
-				System.out.println("Delivers " + readyToDeliver);
-				rg = S + 1;
 			}
 		}
 	}
@@ -314,5 +311,4 @@ public class Process {
 			}
 		}
 	}
-
 }

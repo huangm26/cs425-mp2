@@ -16,14 +16,10 @@ import message.OrderMessage;
 
 public class OrderMessageSend implements Runnable {
 
-	private int messageID;
-	private int i;
-	private int S;
+	public String content;
 
-	public OrderMessageSend(int messageID, int i, int S) {
-		this.messageID = messageID;
-		this.i = i;
-		this.S = S;
+	public OrderMessageSend(String content) {
+		this.content = content;
 	}
 
 	public void r_multicast_send(Message message) throws IOException {
@@ -36,6 +32,7 @@ public class OrderMessageSend implements Runnable {
 	public void b_multicast(Message message) throws IOException {
 		// b-multicast to group
 		for (int i = 0; i < Process.numProc; i++) {
+			//System.out.println(String.format("sending to P%d, order=%d", i, ((OrderMessage) message).order));
 			message.to = i;
 			unicast_send(i, message);
 		}
@@ -61,14 +58,14 @@ public class OrderMessageSend implements Runnable {
 				os.writeObject(message);
 				byte[] data = outputStream.toByteArray();
 				ByteBuffer buffer = ByteBuffer.wrap(data);
-			
+
 				channel.connect(new InetSocketAddress(Process.IP, destPort));
 				// randomized dalay
 				Thread.sleep(randomDelay);
-			
+
 				int bytesend = channel.write(buffer);
 				channel.disconnect();
-//				System.out.println("send "+ bytesend + " bytes");
+				// System.out.println("send "+ bytesend + " bytes");
 				channel.close();
 				// Thread.sleep(2000);
 			}
@@ -77,8 +74,8 @@ public class OrderMessageSend implements Runnable {
 			Thread.sleep(3000);
 			// if haven't received ack from the receiver, continue to send
 			if (!Process.ack[destID][message.messageID]) {
-//				System.out.println(String.format("resend msg %d to %d",
-//						message.messageID, destID));
+				// System.out.println(String.format("resend msg %d to %d",
+				// message.messageID, destID));
 				unicast_send(destID, message);
 			}
 
@@ -99,13 +96,15 @@ public class OrderMessageSend implements Runnable {
 			e1.printStackTrace();
 		}
 		try {
-			OrderMessage om = new OrderMessage(0, 0, messageID);
-			om.i = i;
-			om.S = S;
+			// MessageID unused
+			OrderMessage om = new OrderMessage(0, 0, 0);
+			om.content = content;
 			synchronized (this) {
-				Process.messageID++;
+				om.order = Process.order;
 			}
-			// System.out.println("OM is made");
+			synchronized (this) {
+				Process.order++;
+			}
 			r_multicast_send(om);
 		} catch (IOException e) {
 			e.printStackTrace();
