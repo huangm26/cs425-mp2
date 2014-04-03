@@ -25,7 +25,7 @@ public class ReadInput  implements Runnable{
 			DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 			//get current date time with Date()
 			Date date = new Date();
-			content = content + " " + "MessageID " + Process.messageID;
+			content = content + " " + "From Process" + Process.ID + " MessageID " + Process.messageID;
 			content = content + " " + dateFormat.format(date);
 			RegularMessage message = new RegularMessage(Process.ID, 0, Process.messageID, content);
 			synchronized(this) {
