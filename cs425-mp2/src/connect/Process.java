@@ -26,6 +26,7 @@ import message.Ack;
 import message.Message;
 import message.OrderMessage;
 import message.RegularMessage;
+import message.Total_ack;
 import util.Configuration;
 
 public class Process {
@@ -39,6 +40,7 @@ public class Process {
 	public static ArrayList<String> send_msg;
 	public static ArrayList<String> received;
 	public static boolean[][] ack;
+	public static boolean[][] total_ack;
 	public static int delayTime = 0;
 	public static int dropRate = 0;
 	public static int[] recent;
@@ -98,9 +100,11 @@ public class Process {
 		messageID = 0;
 		// initialize all the acks to false
 		ack = new boolean[numProc][1000];
+		total_ack = new boolean[numProc][1000];
 		for (int i = 0; i < numProc; i++) {
 			for (int j = 0; j < 1000; j++) {
 				ack[i][j] = false;
+				total_ack[i][j] = false;
 			}
 		}
 		send_msg = new ArrayList<String>();
@@ -198,7 +202,7 @@ public class Process {
 		for (int j = 0; j < numProc; j++) {
 			recv_msg = unicast_receive(j, recv_msg);
 			// Only sequencer P0 will receive regular message
-			if (recv_msg.isRegular()) {
+			if (recv_msg.isRegular() && (ID == 0)) {
 				if (!received.contains(((RegularMessage) recv_msg).content)
 						&& (recv_msg != null)) {
 					received.add(((RegularMessage) recv_msg).content);
@@ -256,10 +260,10 @@ public class Process {
 			// my_ack.to, message.messageID));
 			unicast_send_ack(message.from, my_ack);
 		} else if (message.isOrderMessage()) {
-			Ack my_ack = new Ack(message.to, message.from, message.messageID);
+			Total_ack my_ack = new Total_ack(message.to, message.from, ((OrderMessage)message).order);
 			// System.out.println(String.format("sending ack to %d, for ORDER msg %d",
 			// my_ack.to, message.messageID));
-			unicast_send_ack(message.from, my_ack);
+			unicast_send_totalAck(message.from, my_ack);
 		}
 		// if the message is an ack, mark the ack array of the corresponding
 		// message as true
@@ -267,6 +271,10 @@ public class Process {
 			// System.out.println(String.format("receiving ack for %d from %d",message.messageID,
 			// message.from));
 			ack[message.from][message.messageID] = true;
+		}
+		
+		else if (message.isTotalAck()) {
+			total_ack[message.from][message.messageID] = true;
 		}
 
 		return message;
@@ -311,4 +319,44 @@ public class Process {
 			}
 		}
 	}
+	
+	// unicast function for send ack
+		public static void unicast_send_totalAck(int destID, Total_ack message)
+				throws IOException {
+			Random rand = new Random();
+			// Delay in range [0, 2*mean delay]
+			int randomDelay = rand.nextInt(2 * delayTime + 1);
+			// Generate random number from 1 to 100
+			// e.g. If drop rate = 10%, then a random number larger than 10 means
+			// successfully send
+			if (rand.nextInt(100) + 1 > dropRate) {
+				DatagramChannel channel;
+				channel = DatagramChannel.open();
+				int destPort = 6000 + destID;
+				try {
+					InetSocketAddress destAddress = new InetSocketAddress(
+							InetAddress.getByName(IP), destPort);
+					ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+					ObjectOutputStream os = new ObjectOutputStream(outputStream);
+					os.writeObject(message);
+					byte[] data = outputStream.toByteArray();
+					ByteBuffer buffer = ByteBuffer.wrap(data);
+					channel.connect(new InetSocketAddress(IP, destPort));
+					// randomized dalay
+					Thread.sleep(randomDelay);
+					int bytesend = channel.write(buffer);
+					channel.disconnect();
+					// System.out.println("send "+ bytesend + " bytes");
+					channel.close();
+					// Thread.sleep(2000);
+
+				} catch (UnknownHostException e) {
+					e.printStackTrace();
+				} catch (SocketException e) {
+					e.printStackTrace();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 }

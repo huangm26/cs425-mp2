@@ -25,4 +25,8 @@ public abstract class Message implements Serializable {
 	public boolean isOrderMessage() {
 		return this instanceof OrderMessage;
 	}
+	
+	public boolean isTotalAck() {
+		return this instanceof Total_ack;
+	}
 }

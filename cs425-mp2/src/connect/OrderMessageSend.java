@@ -22,14 +22,14 @@ public class OrderMessageSend implements Runnable {
 		this.content = content;
 	}
 
-	public void r_multicast_send(Message message) throws IOException {
+	public void r_multicast_send(OrderMessage message) throws IOException {
 		// this is the message i want to send
 		synchronized (this) {
 			b_multicast(message);
 		}
 	}
 
-	public void b_multicast(Message message) throws IOException {
+	public void b_multicast(OrderMessage message) throws IOException {
 		// b-multicast to group
 		for (int i = 0; i < Process.numProc; i++) {
 			//System.out.println(String.format("sending to P%d, order=%d", i, ((OrderMessage) message).order));
@@ -38,7 +38,7 @@ public class OrderMessageSend implements Runnable {
 		}
 	}
 
-	public void unicast_send(int destID, Message message) throws IOException {
+	public void unicast_send(int destID, OrderMessage message) throws IOException {
 		Random rand = new Random();
 		// Delay in range [0, 2*mean delay]
 		int randomDelay = rand.nextInt(2 * Process.delayTime + 1);
@@ -73,7 +73,7 @@ public class OrderMessageSend implements Runnable {
 			// received
 			Thread.sleep(3000);
 			// if haven't received ack from the receiver, continue to send
-			if (!Process.ack[destID][message.messageID]) {
+			if (!Process.total_ack[destID][message.order]) {
 				// System.out.println(String.format("resend msg %d to %d",
 				// message.messageID, destID));
 				unicast_send(destID, message);
