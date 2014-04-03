@@ -53,7 +53,6 @@ public class Process {
 	public static PriorityQueue<OrderMessage> pq;
 	public static int order;
 	public static int currOrder;
-	public static ArrayList<String> preventQueue;
 
 	private static class OrderComparator implements Comparator<OrderMessage> {
 		@Override
@@ -97,7 +96,6 @@ public class Process {
 			order = 0;
 		}
 		currOrder = 0;
-		preventQueue = new ArrayList<String>();
 
 		messageID = 0;
 		// initialize all the acks to false
@@ -164,12 +162,7 @@ public class Process {
 				if (!received.contains(((RegularMessage) recv_msg).content)
 						&& (recv_msg != null)) {
 					received.add(((RegularMessage) recv_msg).content);
-					// check if the message received is originated by this
-					// process
-					// if (!send_msg.contains(((RegularMessage)
-					// recv_msg).content)) {
-					// b_multicast((RegularMessage) recv_msg);
-					// }
+
 					if (recv_msg != null) {
 						// if in received message in Causal Ordering
 						Lock lock = new ReentrantLock();
@@ -214,8 +207,8 @@ public class Process {
 				}
 			}
 			if (recv_msg.isOrderMessage()) {
-				if (!preventQueue.contains(((OrderMessage)recv_msg).content)) {
-					preventQueue.add(((OrderMessage)recv_msg).content);
+				if (!send_msg.contains(((OrderMessage)recv_msg).content)) {
+					send_msg.add(((OrderMessage)recv_msg).content);
 					pq.add((OrderMessage) recv_msg);
 				}	
 			}
@@ -258,20 +251,14 @@ public class Process {
 		// if the message is regular message, send ack back to sender
 		if (message.isRegular()) {
 			Ack my_ack = new Ack(message.to, message.from, message.messageID);
-			// System.out.println(String.format("sending ack to %d, for REGULAR msg %d",
-			// my_ack.to, message.messageID));
 			unicast_send_ack(message.from, my_ack);
 		} else if (message.isOrderMessage()) {
 			Total_ack my_ack = new Total_ack(message.to, message.from, ((OrderMessage)message).order);
-			// System.out.println(String.format("sending ack to %d, for ORDER msg %d",
-			// my_ack.to, message.messageID));
 			unicast_send_totalAck(message.from, my_ack);
 		}
 		// if the message is an ack, mark the ack array of the corresponding
 		// message as true
 		else if (message.isAck()) {
-			// System.out.println(String.format("receiving ack for %d from %d",message.messageID,
-			// message.from));
 			ack[message.from][message.messageID] = true;
 		}
 		

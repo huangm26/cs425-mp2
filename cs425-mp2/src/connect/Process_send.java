@@ -93,41 +93,7 @@ public class Process_send implements Runnable {
 
 	@Override
 	public void run() {
-		// TODO Auto-generated method stub
-		/*
-		System.out.println("Let's chat!");
-		while (true) {
-			String content = null;
-			Scanner scanner = new Scanner(System.in);
-			content = scanner.nextLine();
-			// message = "From "+ Process.ID + " mID";
-			DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-			// get current date time with Date()
-			Date date = new Date();
-			content = content + " " + dateFormat.format(date);
-			RegularMessage message = new RegularMessage(Process.ID, 0,
-					Process.messageID, content);
-			Process.messageID++;
-			// for causal ordering
-			for (int i = 0; i < Process.numProc; i++) {
-				message.recent[i] = Process.recent[i];
-			}
 
-			try {
-				Thread.sleep(3000);
-			} catch (InterruptedException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-			try {
-				r_multicast_send(message);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		*/
-		
 		//if there are messages in the queue, try to send them all
 		while(true)
 		{
