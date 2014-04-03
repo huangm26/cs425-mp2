@@ -129,10 +129,10 @@ public class Process {
 
 		if (orderingType.equals("causal")) {
 			// Thread for initiate multicast
-			Process_send send_thread = new Process_send();
+			ProcessSend send_thread = new ProcessSend();
 			new Thread(send_thread).start();
 		} else {
-			Process_send_total send_total_thread = new Process_send_total();
+			ProcessSendTotal send_total_thread = new ProcessSendTotal();
 			new Thread(send_total_thread).start();
 		}
 		while (true) {

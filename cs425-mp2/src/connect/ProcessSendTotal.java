@@ -13,8 +13,8 @@ import java.util.Random;
 
 import message.RegularMessage;
 
-public class Process_send_total implements Runnable {
-	public Process_send_total() {
+public class ProcessSendTotal implements Runnable {
+	public ProcessSendTotal() {
 		
 	}
 

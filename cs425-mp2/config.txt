@@ -17,16 +17,16 @@
 # IP_P4 127.0.0.1
 # IP_P5 127.0.0.1
 
-# Delay_P0 1500
-# Delay_P1 1600
-# Delay_P2 1400
-# Delay_P3 700
-# Delay_P4 1300
-# Delay_P5 2100
+# Delay_P0 100
+# Delay_P1 200
+# Delay_P2 300
+# Delay_P3 150
+# Delay_P4 200
+# Delay_P5 100
 
 # DropRate_P0 0
 # DropRate_P1 10
-# DropRate_P2 20
-# DropRate_P3 30
-# DropRate_P4 40
-# DropRate_P5 50
+# DropRate_P2 15
+# DropRate_P3 15
+# DropRate_P4 30
+# DropRate_P5 20

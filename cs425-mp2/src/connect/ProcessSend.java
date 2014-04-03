@@ -20,8 +20,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import message.RegularMessage;
 
-public class Process_send implements Runnable {
-	public Process_send() {
+public class ProcessSend implements Runnable {
+	public ProcessSend() {
 		
 	}
 
