@@ -18,6 +18,7 @@ import java.util.Scanner;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import util.Configuration;
 import message.RegularMessage;
 
 public class ProcessSend implements Runnable {
@@ -55,15 +56,15 @@ public class ProcessSend implements Runnable {
 			int destPort = 6000 + destID;
 			try {
 				if (rand.nextInt(100) + 1 > Process.dropRate) {
-					InetSocketAddress destAddress = new InetSocketAddress(
-							InetAddress.getByName(Process.IP), destPort);
+					Configuration.getInstance();
 					ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 					ObjectOutputStream os = new ObjectOutputStream(outputStream);
 					os.writeObject(message);
 					byte[] data = outputStream.toByteArray();
 					ByteBuffer buffer = ByteBuffer.wrap(data);
 				
-					channel.connect(new InetSocketAddress(Process.IP, destPort));
+					channel.connect( new InetSocketAddress(
+							InetAddress.getByName(Configuration.IP[destID]), destPort));
 					// randomized dalay
 					Thread.sleep(randomDelay);
 				

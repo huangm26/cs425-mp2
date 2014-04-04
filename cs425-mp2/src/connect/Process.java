@@ -120,7 +120,7 @@ public class Process {
 
 		// mychannel.socket().bind(new
 		// InetSocketAddress(InetAddress.getByName("localhost"),myPort));
-		mychannel.socket().bind(new InetSocketAddress(IP, myPort));
+		mychannel.socket().bind(new InetSocketAddress(InetAddress.getByName(IP), myPort));
 		// set the channel to non-blocking
 		mychannel.configureBlocking(false);
 		// Thread for reading user input
@@ -285,14 +285,14 @@ public class Process {
 			channel = DatagramChannel.open();
 			int destPort = 6000 + destID;
 			try {
-				InetSocketAddress destAddress = new InetSocketAddress(
-						InetAddress.getByName(IP), destPort);
+				Configuration.getInstance();
 				ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 				ObjectOutputStream os = new ObjectOutputStream(outputStream);
 				os.writeObject(message);
 				byte[] data = outputStream.toByteArray();
 				ByteBuffer buffer = ByteBuffer.wrap(data);
-				channel.connect(new InetSocketAddress(IP, destPort));
+				channel.connect(new InetSocketAddress(
+						InetAddress.getByName(Configuration.IP[destID]), destPort));
 				// randomized dalay
 				Thread.sleep(randomDelay);
 				int bytesend = channel.write(buffer);
@@ -325,14 +325,14 @@ public class Process {
 				channel = DatagramChannel.open();
 				int destPort = 6000 + destID;
 				try {
-					InetSocketAddress destAddress = new InetSocketAddress(
-							InetAddress.getByName(IP), destPort);
+					Configuration.getInstance();
 					ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 					ObjectOutputStream os = new ObjectOutputStream(outputStream);
 					os.writeObject(message);
 					byte[] data = outputStream.toByteArray();
 					ByteBuffer buffer = ByteBuffer.wrap(data);
-					channel.connect(new InetSocketAddress(IP, destPort));
+					channel.connect(new InetSocketAddress(
+							InetAddress.getByName(Configuration.IP[destID]), destPort));
 					// randomized dalay
 					Thread.sleep(randomDelay);
 					int bytesend = channel.write(buffer);
