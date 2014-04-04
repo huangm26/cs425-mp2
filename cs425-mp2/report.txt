@@ -1,0 +1,7 @@
+To simulate message losses, we simply generate a random number each time before establishing the unicast connection, in other words, before opening the "DatagramChannel". For example, if the drop rate given to a specific process is 30%, then we generate an integer from 1 to 100, and the unicast will only be performed if the generated value is greater than 30.
+
+To simulate message delay, we simply generate a random number each time before writing message into "DatagramChannel". For a given mean delay, the delay time will be generated randomly in range of [0, 2*mean delay], and let the sending thread to sleep this amount of time.
+
+For causal ordering
+
+For total ordering, the algorithm we were using is to designate a process, in our case, P0, as the sequencer. Each time a message being multicasted, the message will be sent to P0 as well. And P0 will generate a special kind of message, in our program, called "OrderMessage", which contains both the original message and the a unique order from 0. Increment the order by 1 every time a new OrderMessage has been created. This OrderMessage will then be multicasted, processes receiving the message will first put it into a hold-back queue, in our program, a priority queue, sorted by minimum order number. Each process has a variable "currOrder", starting from 0, to keep track of the current valid order. Keep checking peek of the priority queue, once the order of the message at the peek matches "currOrder", this message will be allowed to deliver.
