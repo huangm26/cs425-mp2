@@ -212,7 +212,8 @@ public class Process {
 					pq.add((OrderMessage) recv_msg);
 				}	
 			}
-			if (pq.peek() != null) {
+			//System.out.println("size=" + pq.size());
+			while (pq.peek() != null) {
 				// Deliver message by order from 0
 				OrderMessage readyToDeliver = pq.peek();
 				//System.out.println(String.format("msgOrder=%d currOrder=%d", readyToDeliver.order, currOrder));
@@ -221,7 +222,8 @@ public class Process {
 					//System.out.println("order=" + readyToDeliver.order);
 					pq.poll();
 					currOrder++;
-				}
+				} else
+					break;
 			}
 		}
 	}
